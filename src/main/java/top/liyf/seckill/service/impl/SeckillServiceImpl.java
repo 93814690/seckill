@@ -2,6 +2,9 @@ package top.liyf.seckill.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import top.liyf.seckill.dao.SeckillDao;
 import top.liyf.seckill.dao.SuccessKilledDao;
@@ -24,12 +27,15 @@ import java.util.List;
  * @Date: Created in 2018/3/22/ 11:18
  * @Modified By:
  */
+@Service
 public class SeckillServiceImpl implements SeckillService {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    @Autowired
     private SeckillDao seckillDao;
 
+    @Autowired
     private SuccessKilledDao successKilledDao;
 
     //md5盐值字符串，用于混淆MD5
@@ -66,6 +72,7 @@ public class SeckillServiceImpl implements SeckillService {
         return md5;
     }
 
+    @Transactional
     public SeckillExecution executeSeckill(long seckillID, long userPhone, String md5)
             throws SeckillException, RepeatKillException, SeckillCloseException {
         if (md5 == null || !md5.equals(getMD5(seckillID))) {
