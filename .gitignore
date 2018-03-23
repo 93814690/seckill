@@ -6,3 +6,4 @@
 .idea
 *.iml
 /src/main/resources/jdbc.properties
+/src/main/resources/rebel.xml
