@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import top.liyf.seckill.dao.SeckillDao;
 import top.liyf.seckill.dao.SuccessKilledDao;
+import top.liyf.seckill.dao.cache.RedisDao;
 import top.liyf.seckill.dto.Exposer;
 import top.liyf.seckill.dto.SeckillExecution;
 import top.liyf.seckill.entity.Seckill;
@@ -38,6 +39,9 @@ public class SeckillServiceImpl implements SeckillService {
     @Autowired
     private SuccessKilledDao successKilledDao;
 
+    @Autowired
+    private RedisDao redisDao;
+
     //md5盐值字符串，用于混淆MD5
     private final String salt = "sdfhuehf38jefn3*&(dsad212";
 
@@ -51,9 +55,16 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     public Exposer exportSeckillUrl(long seckillId) {
-        Seckill seckill = seckillDao.queryById(seckillId);
+
+        //优化点：缓存优化：超时的基础上维护一致性
+        Seckill seckill = redisDao.getSeckill(seckillId);
         if (seckill == null) {
-            return new Exposer(false, seckillId);
+            //从数据库拿数据
+            seckill = seckillDao.queryById(seckillId);
+            if (seckill == null) {
+                return new Exposer(false, seckillId);
+            }
+            redisDao.putSeckill(seckill);
         }
         Date startTime = seckill.getStartTime();
         Date endTime = seckill.getEndTime();
