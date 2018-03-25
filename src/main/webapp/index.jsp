@@ -1,1 +1,1 @@
-<jsp:forward page="/seckill/list"/>
+<jsp:forward page="/list"/>
