@@ -1,5 +1,6 @@
 package top.liyf.seckill.service.impl;
 
+import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,9 @@ import top.liyf.seckill.exception.SeckillException;
 import top.liyf.seckill.service.SeckillService;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: liyf
@@ -108,9 +111,35 @@ public class SeckillServiceImpl implements SeckillService {
             throw e1;
         } catch (RepeatKillException e2) {
             throw e2;
-        }catch (Exception e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
             throw new SeckillException("seckill inner error" + e.getMessage());
+        }
+    }
+
+    public SeckillExecution executeSeckillProceDure(long seckillID, long userPhone, String md5) {
+
+        if (md5 == null || !md5.equals(getMD5(seckillID))) {
+            return new SeckillExecution(seckillID, SeckillStateEnum.DATA_REWRITE);
+        }
+        Date killTime = new Date();
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("seckillID", seckillID);
+        map.put("phone", userPhone);
+        map.put("killTime", killTime);
+        map.put("result", null);
+        try {
+            seckillDao.killByProcedure(map);
+            Integer result = MapUtils.getInteger(map, "result", -2);
+            if (result == 1) {
+                SuccessKilled sk = successKilledDao.queryByIdWithSeckill(seckillID, userPhone);
+                return new SeckillExecution(seckillID, SeckillStateEnum.SUCCESS, sk);
+            } else {
+                return new SeckillExecution(seckillID, SeckillStateEnum.stateOf(result));
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return new SeckillExecution(seckillID, SeckillStateEnum.INNER_ERROR);
         }
     }
 }

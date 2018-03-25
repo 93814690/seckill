@@ -39,4 +39,14 @@
         LIMIT #{offset}, #{limit}
     </select>
 
+    <select id="killByProcedure" statementType="CALLABLE">
+        CALL execute_seckill(
+                #{seckillID,jdbcType=BIGINT,mode=IN},
+                #{phone,jdbcType=BIGINT,mode=IN},
+                #{killTime,jdbcType=TIMESTAMP,mode=IN},
+                #{result,jdbcType=INTEGER,mode=OUT}
+        );
+
+    </select>
+
 </mapper>
